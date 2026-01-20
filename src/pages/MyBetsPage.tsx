@@ -1,72 +1,11 @@
-import { History, CheckCircle, XCircle, Clock, ArrowLeft } from "lucide-react";
+import { History, CheckCircle, XCircle, Clock, ArrowLeft, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Betslip from "@/components/Betslip";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
-
-const bets = [
-  { 
-    id: 1, 
-    match: "Man City vs Liverpool", 
-    market: "1X2", 
-    selection: "1", 
-    stake: 50000, 
-    odds: 2.45, 
-    totalOdds: 2.45,
-    status: "won", 
-    payout: 122500,
-    date: "Today, 14:30"
-  },
-  { 
-    id: 2, 
-    match: "Barcelona vs Real Madrid", 
-    market: "Over/Under", 
-    selection: "Over 2.5", 
-    stake: 30000, 
-    odds: 1.85, 
-    totalOdds: 1.85,
-    status: "lost", 
-    payout: 0,
-    date: "Today, 12:00"
-  },
-  { 
-    id: 3, 
-    match: "Bayern vs Dortmund", 
-    market: "Asian Handicap", 
-    selection: "-1.5", 
-    stake: 100000, 
-    odds: 2.10, 
-    totalOdds: 2.10,
-    status: "pending", 
-    payout: 0,
-    date: "Today, 18:00"
-  },
-  { 
-    id: 4, 
-    match: "PSG vs Monaco", 
-    market: "1X2", 
-    selection: "1", 
-    stake: 25000, 
-    odds: 1.45, 
-    totalOdds: 1.45,
-    status: "won", 
-    payout: 36250,
-    date: "Yesterday"
-  },
-  { 
-    id: 5, 
-    match: "Liverpool vs Chelsea + Arsenal vs Spurs", 
-    market: "Accumulator", 
-    selection: "2 Selections", 
-    stake: 10000, 
-    odds: 4.50, 
-    totalOdds: 4.50,
-    status: "pending", 
-    payout: 0,
-    date: "Today, 17:30"
-  },
-];
+import { useFirebaseBets, Bet } from "@/hooks/useFirebaseBets";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -94,9 +33,71 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  if (date.toDateString() === now.toDateString()) {
+    return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } else {
+    return date.toLocaleDateString([], { day: 'numeric', month: 'short' }) + 
+      `, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+};
+
+const BetCard = ({ bet }: { bet: Bet }) => {
+  const matchDisplay = bet.selections.length > 1 
+    ? `${bet.selections[0].homeTeam} vs ${bet.selections[0].awayTeam} + ${bet.selections.length - 1} more`
+    : `${bet.selections[0]?.homeTeam || 'Unknown'} vs ${bet.selections[0]?.awayTeam || 'Unknown'}`;
+  
+  const selectionDisplay = bet.selections.length > 1
+    ? `${bet.selections.length} Selections`
+    : `${bet.selections[0]?.market || 'Market'}: ${bet.selections[0]?.selection || 'Selection'}`;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1">
+          <p className="text-xs text-muted-foreground">{formatDate(bet.createdAt)}</p>
+          <p className="text-sm font-medium text-foreground mt-1">{matchDisplay}</p>
+          <p className="text-xs text-muted-foreground">{selectionDisplay}</p>
+          {bet.type === "virtual" && (
+            <span className="inline-block mt-1 text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">
+              Virtual
+            </span>
+          )}
+        </div>
+        {getStatusIcon(bet.status)}
+      </div>
+      <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
+        <div className="text-xs text-muted-foreground">
+          Stake: <span className="text-foreground">UGX {bet.stake.toLocaleString()}</span>
+        </div>
+        <div className="text-xs">
+          <span className="text-muted-foreground">Odds: </span>
+          <span className={bet.status === "pending" ? "text-primary" : "text-foreground"} style={{ fontWeight: 600 }}>
+            {bet.totalOdds.toFixed(2)}
+          </span>
+        </div>
+        <div className={`text-xs font-medium ${getStatusColor(bet.status)}`}>
+          {bet.status === "pending" 
+            ? `To Win: UGX ${bet.potentialWin.toLocaleString()}`
+            : bet.status === "won" 
+              ? `+UGX ${bet.potentialWin.toLocaleString()}` 
+              : `-UGX ${bet.stake.toLocaleString()}`}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MyBetsPage = () => {
-  const pendingBets = bets.filter(b => b.status === "pending");
-  const settledBets = bets.filter(b => b.status !== "pending");
+  const { user } = useAuth();
+  const { pendingBets, settledBets, loading, error } = useFirebaseBets();
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -114,81 +115,58 @@ const MyBetsPage = () => {
       
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto p-4">
-          {/* Pending Bets */}
-          {pendingBets.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock className="w-5 h-5 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">Pending ({pendingBets.length})</h2>
-              </div>
-              <div className="space-y-3">
-                {pendingBets.map((bet) => (
-                  <div
-                    key={bet.id}
-                    className="bg-card border border-border rounded-xl p-4"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground">{bet.date}</p>
-                        <p className="text-sm font-medium text-foreground mt-1">{bet.match}</p>
-                        <p className="text-xs text-muted-foreground">{bet.market}: {bet.selection}</p>
-                      </div>
-                      {getStatusIcon(bet.status)}
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
-                      <div className="text-xs text-muted-foreground">
-                        Stake: <span className="text-foreground">UGX {bet.stake.toLocaleString()}</span>
-                      </div>
-                      <div className="text-xs">
-                        <span className="text-muted-foreground">Odds: </span>
-                        <span className="text-primary font-semibold">{bet.totalOdds.toFixed(2)}</span>
-                      </div>
-                      <div className="text-xs text-accent font-medium">
-                        To Win: UGX {(bet.stake * bet.totalOdds).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {!user ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-muted-foreground mb-4">Please login to view your bets</p>
+              <Link to="/" className="text-primary hover:underline">Go to Home</Link>
             </div>
-          )}
-
-          {/* Settled Bets */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <History className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-sm font-semibold text-foreground">Settled</h2>
+          ) : loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-            <div className="space-y-3">
-              {settledBets.map((bet) => (
-                <div
-                  key={bet.id}
-                  className="bg-card border border-border rounded-xl p-4"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">{bet.date}</p>
-                      <p className="text-sm font-medium text-foreground mt-1">{bet.match}</p>
-                      <p className="text-xs text-muted-foreground">{bet.market}: {bet.selection}</p>
-                    </div>
-                    {getStatusIcon(bet.status)}
+          ) : error ? (
+            <div className="text-center py-16 text-destructive">{error}</div>
+          ) : (
+            <>
+              {/* Pending Bets */}
+              {pendingBets.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock className="w-5 h-5 text-accent" />
+                    <h2 className="text-sm font-semibold text-foreground">Pending ({pendingBets.length})</h2>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
-                    <div className="text-xs text-muted-foreground">
-                      Stake: <span className="text-foreground">UGX {bet.stake.toLocaleString()}</span>
-                    </div>
-                    <div className="text-xs">
-                      <span className="text-muted-foreground">Odds: </span>
-                      <span className="text-foreground font-semibold">{bet.totalOdds.toFixed(2)}</span>
-                    </div>
-                    <div className={`text-xs font-medium ${getStatusColor(bet.status)}`}>
-                      {bet.status === "won" ? `+UGX ${bet.payout.toLocaleString()}` : `-UGX ${bet.stake.toLocaleString()}`}
-                    </div>
+                  <div className="space-y-3">
+                    {pendingBets.map((bet) => (
+                      <BetCard key={bet.id} bet={bet} />
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              )}
+
+              {/* Settled Bets */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <History className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">Settled ({settledBets.length})</h2>
+                </div>
+                {settledBets.length === 0 && pendingBets.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No bets yet. Place your first bet!
+                  </div>
+                ) : settledBets.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No settled bets yet
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {settledBets.map((bet) => (
+                      <BetCard key={bet.id} bet={bet} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

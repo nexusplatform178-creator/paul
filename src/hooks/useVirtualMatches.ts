@@ -36,10 +36,8 @@ interface UseVirtualMatchesReturn {
   refresh: () => void;
 }
 
-// CORS proxy for API calls
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
-const OFFER_API = "https://www.fortebet.ug/api/web/v1/virtual-soccer/offer";
-const RESULTS_API = "https://www.fortebet.ug/api/web/v1/virtual-soccer/results";
+// Use Supabase Edge Function proxy to avoid CORS
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/virtual-proxy`;
 
 const parseMarket = (markets: any[], marketName: string): Record<string, number> => {
   const result: Record<string, number> = {};
@@ -80,8 +78,12 @@ export const useVirtualMatches = (): UseVirtualMatchesReturn => {
       setLoading(true);
       setError(null);
 
-      // Fetch matches
-      const offerResponse = await fetch(`${CORS_PROXY}${encodeURIComponent(OFFER_API)}`);
+      // Fetch matches via Edge Function proxy
+      const offerResponse = await fetch(`${PROXY_URL}?endpoint=offer`, {
+        headers: {
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        }
+      });
       
       if (!offerResponse.ok) {
         throw new Error("Failed to fetch matches");
@@ -160,7 +162,11 @@ export const useVirtualMatches = (): UseVirtualMatchesReturn => {
 
       // Fetch results
       try {
-        const resultsResponse = await fetch(`${CORS_PROXY}${encodeURIComponent(RESULTS_API)}`);
+        const resultsResponse = await fetch(`${PROXY_URL}?endpoint=results`, {
+          headers: {
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          }
+        });
         if (resultsResponse.ok) {
           const resultsData = await resultsResponse.json();
           const resultsArray = resultsData?.data?.results || resultsData?.results || resultsData || [];
