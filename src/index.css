@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 220 10% 4%;
+    --foreground: 0 0% 90%;
+
+    --card: 220 10% 7%;
+    --card-foreground: 0 0% 90%;
+
+    --popover: 220 10% 7%;
+    --popover-foreground: 0 0% 90%;
+
+    --primary: 142 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 10% 12%;
+    --secondary-foreground: 0 0% 75%;
+
+    --muted: 220 10% 15%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 10% 18%;
+    --input: 220 10% 15%;
+    --ring: 142 70% 45%;
+
+    --radius: 0.25rem;
+
+    --odds-green: 142 70% 45%;
+    --odds-red: 0 70% 50%;
+    --odds-yellow: 45 100% 50%;
+    --live-red: 0 85% 55%;
+    --header-bg: 220 10% 8%;
+    --row-hover: 220 10% 10%;
+    --sidebar-bg: 220 10% 5%;
+    --table-header: 220 10% 12%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 12px;
+  }
+}
+
+@layer utilities {
+  .odds-cell {
+    @apply px-2 py-1 text-center cursor-pointer transition-colors duration-150;
+  }
+  
+  .odds-cell:hover {
+    @apply bg-[hsl(var(--row-hover))];
+  }
+  
+  .odds-green {
+    @apply text-[hsl(var(--odds-green))];
+  }
+  
+  .odds-red {
+    @apply text-[hsl(var(--odds-red))];
+  }
+  
+  .odds-yellow {
+    @apply text-[hsl(var(--odds-yellow))];
+  }
+  
+  .live-badge {
+    @apply text-[hsl(var(--live-red))] font-medium;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Ultra-thin custom scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* Apply thin scrollbar globally on desktop */
+  @media (min-width: 768px) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--border)) transparent;
+    }
+
+    *::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted) / 0.5);
+      border-radius: 4px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.5);
+    }
+  }
+}
