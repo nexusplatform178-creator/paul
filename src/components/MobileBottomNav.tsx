@@ -1,5 +1,6 @@
 import { Book, Gamepad2, Ticket, History, User } from "lucide-react";
 import { useBetslip } from "@/contexts/BetslipContext";
+import { useVirtualBetslip } from "@/contexts/VirtualBetslipContext";
 import { Link, useLocation } from "react-router-dom";
 
 interface NavItem {
@@ -19,12 +20,20 @@ const navItems: NavItem[] = [
 
 const MobileBottomNav = () => {
   const location = useLocation();
-  const { selections, setIsOpen } = useBetslip();
+  const { selections: regularSelections, setIsOpen: setRegularBetslipOpen } = useBetslip();
+  const { selections: virtualSelections, setIsOpen: setVirtualBetslipOpen } = useVirtualBetslip();
+
+  const isVirtualPage = location.pathname === "/virtual";
+  const selections = isVirtualPage ? virtualSelections : regularSelections;
 
   const handleNavClick = (item: NavItem, e: React.MouseEvent) => {
     if (item.id === "betslip") {
       e.preventDefault();
-      setIsOpen(true);
+      if (isVirtualPage) {
+        setVirtualBetslipOpen(true);
+      } else {
+        setRegularBetslipOpen(true);
+      }
     }
   };
 
@@ -35,7 +44,11 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="h-16 bg-card/95 backdrop-blur-lg border-t border-border/50 flex items-center justify-around px-2 md:hidden fixed bottom-0 left-0 right-0 z-50 shadow-lg">
+    <nav className={`h-16 backdrop-blur-lg border-t flex items-center justify-around px-2 md:hidden fixed bottom-0 left-0 right-0 z-50 shadow-lg transition-all duration-300 ${
+      isVirtualPage 
+        ? "bg-purple-900/95 border-purple-500/30" 
+        : "bg-card/95 border-border/50"
+    }`}>
       {navItems.map((item) => {
         const active = isActive(item.path);
         const isBetslip = item.id === "betslip";
@@ -44,22 +57,24 @@ const MobileBottomNav = () => {
         const content = (
           <div className={`
             flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200
-            ${active && !isBetslip ? "bg-primary/15" : ""}
-            ${isBetslip && hasBets ? "bg-primary" : ""}
+            ${active && !isBetslip ? isVirtualPage ? "bg-purple-500/20" : "bg-primary/15" : ""}
+            ${isBetslip && hasBets ? isVirtualPage ? "bg-purple-500" : "bg-primary" : ""}
           `}>
             <div className="relative">
               {isBetslip ? (
                 <div className={`
                   flex items-center justify-center gap-1 px-2 py-1 rounded-xl
-                  ${hasBets ? "" : "bg-secondary"}
+                  ${hasBets ? "" : isVirtualPage ? "bg-purple-500/20" : "bg-secondary"}
                 `}>
                   <item.icon 
                     className={`w-5 h-5 ${
-                      hasBets ? "text-primary-foreground" : "text-muted-foreground"
+                      hasBets 
+                        ? "text-white" 
+                        : isVirtualPage ? "text-purple-300" : "text-muted-foreground"
                     }`} 
                   />
                   {hasBets && (
-                    <span className="text-xs font-bold text-primary-foreground min-w-[14px] text-center">
+                    <span className="text-xs font-bold text-white min-w-[14px] text-center">
                       {selections.length}
                     </span>
                   )}
@@ -67,20 +82,37 @@ const MobileBottomNav = () => {
               ) : (
                 <div className={`
                   w-10 h-10 rounded-xl flex items-center justify-center transition-all
-                  ${active ? "bg-primary shadow-lg shadow-primary/30" : "bg-secondary/60"}
+                  ${active 
+                    ? isVirtualPage 
+                      ? "bg-purple-500 shadow-lg shadow-purple-500/30" 
+                      : "bg-primary shadow-lg shadow-primary/30" 
+                    : isVirtualPage 
+                      ? "bg-purple-500/20" 
+                      : "bg-secondary/60"
+                  }
                 `}>
                   <item.icon 
                     className={`w-5 h-5 ${
-                      active ? "text-primary-foreground" : "text-muted-foreground"
+                      active 
+                        ? "text-white" 
+                        : isVirtualPage 
+                          ? "text-purple-300" 
+                          : "text-muted-foreground"
                     }`} 
                   />
                 </div>
               )}
             </div>
             <span className={`text-[10px] font-medium leading-tight ${
-              active ? "text-primary" : isBetslip && hasBets ? "text-primary-foreground" : "text-muted-foreground"
+              active 
+                ? isVirtualPage ? "text-purple-300" : "text-primary" 
+                : isBetslip && hasBets 
+                  ? "text-white" 
+                  : isVirtualPage 
+                    ? "text-purple-300/70" 
+                    : "text-muted-foreground"
             }`}>
-              {item.label}
+              {isBetslip && isVirtualPage ? "V-Betslip" : item.label}
             </span>
           </div>
         );
