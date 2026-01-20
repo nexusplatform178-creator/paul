@@ -31,13 +31,13 @@ const VirtualBetslip = ({ selections, onRemoveSelection, onClearBetslip }: Virtu
   };
 
   return (
-    <div className="border-t border-border flex flex-col">
+    <div className="border-t border-purple-500/20 flex flex-col mt-auto">
       {/* Header */}
-      <div className="bg-primary/10 px-3 py-2 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-primary">VIRTUAL BETSLIP</span>
+          <span className="text-xs font-bold text-white">VIRTUAL BETSLIP</span>
           {selections.length > 0 && (
-            <span className="bg-primary text-primary-foreground text-xxs px-1.5 py-0.5 rounded-full">
+            <span className="bg-white/20 text-white text-xxs px-1.5 py-0.5 rounded-full font-bold">
               {selections.length}
             </span>
           )}
@@ -45,9 +45,9 @@ const VirtualBetslip = ({ selections, onRemoveSelection, onClearBetslip }: Virtu
         {selections.length > 0 && (
           <button
             onClick={onClearBetslip}
-            className="p-1 hover:bg-secondary rounded transition-colors"
+            className="p-1 hover:bg-white/20 rounded transition-colors"
           >
-            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+            <Trash2 className="w-3.5 h-3.5 text-white/80" />
           </button>
         )}
       </div>
@@ -61,14 +61,14 @@ const VirtualBetslip = ({ selections, onRemoveSelection, onClearBetslip }: Virtu
         ) : (
           <div className="space-y-2">
             {selections.map((sel) => (
-              <div key={sel.id} className="bg-secondary rounded p-2 text-xs">
+              <div key={sel.id} className="bg-secondary rounded-xl p-2 text-xs border border-purple-500/20">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <p className="text-foreground font-medium">{sel.homeTeam} vs {sel.awayTeam}</p>
-                    <p className="text-muted-foreground text-xxs mt-0.5">{sel.market}: {sel.selection}</p>
+                    <p className="text-purple-400 text-xxs mt-0.5">{sel.market}: {sel.selection}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-primary font-semibold">{sel.odds.toFixed(2)}</span>
+                    <span className="text-purple-400 font-semibold">{sel.odds.toFixed(2)}</span>
                     <button
                       onClick={() => onRemoveSelection(sel.id)}
                       className="p-0.5 hover:bg-background rounded"
@@ -85,10 +85,10 @@ const VirtualBetslip = ({ selections, onRemoveSelection, onClearBetslip }: Virtu
 
       {/* Footer */}
       {selections.length > 0 && (
-        <div className="border-t border-border p-3 space-y-2">
+        <div className="border-t border-purple-500/20 p-3 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Total Odds:</span>
-            <span className="text-foreground font-semibold">{totalOdds.toFixed(2)}</span>
+            <span className="text-purple-400 font-bold">{totalOdds.toFixed(2)}</span>
           </div>
           
           <div>
@@ -98,19 +98,19 @@ const VirtualBetslip = ({ selections, onRemoveSelection, onClearBetslip }: Virtu
               placeholder="Enter stake"
               value={stake || ""}
               onChange={(e) => setStake(parseFloat(e.target.value) || 0)}
-              className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+              className="w-full bg-background border border-purple-500/30 rounded-xl px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
             />
           </div>
           
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Potential Win:</span>
-            <span className="text-primary font-semibold">UGX {potentialWinnings.toLocaleString()}</span>
+            <span className="text-purple-400 font-bold">UGX {potentialWinnings.toLocaleString()}</span>
           </div>
           
           <button
             onClick={handlePlaceBet}
             disabled={stake === 0}
-            className="w-full py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl text-xs font-bold hover:from-purple-700 hover:to-purple-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
           >
             Place Virtual Bet
           </button>
