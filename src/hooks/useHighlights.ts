@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface HighlightOutcome {
   alias: string;
@@ -58,9 +57,9 @@ export const useHighlights = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [lastPage, setLastPage] = useState(1);
+  const pageRef = useRef(1);
+  const loadedIdsRef = useRef<Set<number>>(new Set());
 
   const fetchHighlights = useCallback(async (pageNum: number, append: boolean = false) => {
     try {
@@ -68,15 +67,10 @@ export const useHighlights = () => {
         setLoadingMore(true);
       } else {
         setLoading(true);
+        loadedIdsRef.current.clear();
       }
       setError(null);
 
-      const { data, error: fnError } = await supabase.functions.invoke('highlights-proxy', {
-        body: null,
-        headers: {},
-      });
-
-      // Use query params approach
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/highlights-proxy?page=${pageNum}&per_page=10`,
         {
@@ -94,12 +88,20 @@ export const useHighlights = () => {
       const result: HighlightsResponse = await response.json();
       
       if (result.data) {
+        // Filter out duplicates
+        const newMatches = result.data.filter(match => {
+          if (loadedIdsRef.current.has(match.match_id)) {
+            return false;
+          }
+          loadedIdsRef.current.add(match.match_id);
+          return true;
+        });
+
         if (append) {
-          setMatches(prev => [...prev, ...result.data]);
+          setMatches(prev => [...prev, ...newMatches]);
         } else {
-          setMatches(result.data);
+          setMatches(newMatches);
         }
-        setLastPage(result.last_page);
         setHasMore(pageNum < result.last_page);
       }
     } catch (err) {
@@ -117,14 +119,13 @@ export const useHighlights = () => {
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchHighlights(nextPage, true);
+      pageRef.current += 1;
+      fetchHighlights(pageRef.current, true);
     }
-  }, [page, loadingMore, hasMore, fetchHighlights]);
+  }, [loadingMore, hasMore, fetchHighlights]);
 
   const refresh = useCallback(() => {
-    setPage(1);
+    pageRef.current = 1;
     setMatches([]);
     fetchHighlights(1, false);
   }, [fetchHighlights]);
