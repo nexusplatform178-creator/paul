@@ -113,6 +113,7 @@ const MobileOddsTable = () => {
               <MobileMatchCard 
                 key={match.match_id}
                 matchId={`match-${match.match_id}`}
+                numericMatchId={match.match_id}
                 time={formatTime()}
                 isLive={!!isLive}
                 liveMinute={isLive ? match.fixture_status?.event_time : undefined}
