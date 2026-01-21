@@ -1,258 +1,9 @@
-import { Star, ChevronDown, RefreshCw } from "lucide-react";
+import React from "react";
+import { Star, ChevronDown, RefreshCw, Loader2 } from "lucide-react";
 import { useBetslip } from "@/contexts/BetslipContext";
-
-interface Match {
-  id: number;
-  time: string;
-  isLive?: boolean;
-  liveMinute?: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore?: number;
-  awayScore?: number;
-  homeFlag?: string;
-  awayFlag?: string;
-  position?: string;
-  odds: {
-    "1x2": { "1": number; x: number; "2": number };
-    handicap: { value: string; a1: number; a2: number };
-    total: { value: string; o: number; u: number };
-  };
-  isFavorite?: boolean;
-  priceHighlight?: "green" | "red" | "yellow";
-}
-
-interface TableSection {
-  title: string;
-  league?: string;
-  count: number;
-  isLive?: boolean;
-  matches: Match[];
-}
-
-const sections: TableSection[] = [
-  {
-    title: "FAVOURITES",
-    count: 2,
-    matches: [],
-  },
-  {
-    title: "",
-    league: "UEFA Champions League",
-    count: 0,
-    matches: [
-      {
-        id: 1,
-        time: "15'",
-        isLive: true,
-        liveMinute: "15'",
-        homeTeam: "Paris Saint-Germain",
-        awayTeam: "Manchester City",
-        homeScore: 4,
-        awayScore: 3,
-        odds: {
-          "1x2": { "1": 2.28, x: 2.442, "2": 7.139 },
-          handicap: { value: "-1.5", a1: 5.250, a2: 14.187 },
-          total: { value: "2.5", o: 1.314, u: 1.101 },
-        },
-        isFavorite: true,
-        priceHighlight: "green",
-      },
-      {
-        id: 2,
-        time: "90'+15'",
-        isLive: true,
-        liveMinute: "90'+15'",
-        homeTeam: "Shakhtar Donetsk",
-        awayTeam: "Dynamo Kyiv",
-        homeScore: 0,
-        awayScore: 0,
-        position: "€36.48",
-        odds: {
-          "1x2": { "1": 2.241, x: 1.101, "2": 9.754 },
-          handicap: { value: "-1.5", a1: 7.123, a2: 14.187 },
-          total: { value: "2.5", o: 3.219, u: 8.214 },
-        },
-        isFavorite: true,
-      },
-      {
-        id: 3,
-        time: "Today",
-        homeTeam: "Marseille",
-        awayTeam: "Ajax Amsterdam",
-        position: "POSITION",
-        odds: {
-          "1x2": { "1": 2.442, x: 2.442, "2": 5.250 },
-          handicap: { value: "-1.5", a1: 5.195, a2: 2.113 },
-          total: { value: "2.5", o: 5.250, u: 8.067 },
-        },
-        isFavorite: true,
-      },
-      {
-        id: 4,
-        time: "Today",
-        homeTeam: "Veres Rivne",
-        awayTeam: "Karpaty Lviv",
-        odds: {
-          "1x2": { "1": 1.314, x: 2.241, "2": 5.250 },
-          handicap: { value: "-1.5", a1: 6.001, a2: 2.962 },
-          total: { value: "2.5", o: 4.001, u: 6.410 },
-        },
-        isFavorite: true,
-        priceHighlight: "green",
-      },
-      {
-        id: 5,
-        time: "24 Jul",
-        homeTeam: "Ajax",
-        awayTeam: "Atlético Madrid",
-        odds: {
-          "1x2": { "1": 4.851, x: -0.5, "2": 1.0 },
-          handicap: { value: "-1.5", a1: 1.101, a2: 6.001 },
-          total: { value: "2.5", o: 2.293, u: 5.354 },
-        },
-        isFavorite: true,
-      },
-      {
-        id: 6,
-        time: "24 Jul",
-        homeTeam: "AS Roma",
-        awayTeam: "AC Milan",
-        odds: {
-          "1x2": { "1": 5.250, x: 3.5, "2": 3.5 },
-          handicap: { value: "-1.5", a1: 2.296, a2: 9.216 },
-          total: { value: "2.5", o: 2.241, u: 2.849 },
-        },
-        isFavorite: true,
-      },
-      {
-        id: 7,
-        time: "25 Jul",
-        homeTeam: "FC Barcelona",
-        awayTeam: "Atlético Madrid",
-        position: "€36.48",
-        odds: {
-          "1x2": { "1": 4.001, x: 4.216, "2": 2.296 },
-          handicap: { value: "-1.5", a1: 4.526, a2: 9.754 },
-          total: { value: "2.5", o: 4.216, u: 7.123 },
-        },
-        isFavorite: true,
-        priceHighlight: "yellow",
-      },
-      {
-        id: 8,
-        time: "25 Jul",
-        homeTeam: "FC Porto",
-        awayTeam: "S.L. Benfica",
-        odds: {
-          "1x2": { "1": 5.354, x: 1.101, "2": 8.067 },
-          handicap: { value: "-1.5", a1: 1.314, a2: 2.849 },
-          total: { value: "2.5", o: 4.001, u: 1.101 },
-        },
-        isFavorite: true,
-      },
-    ],
-  },
-];
-
-const liveSections: TableSection[] = [
-  {
-    title: "LIVE",
-    count: 2,
-    isLive: true,
-    league: "Ukrainian Premier League",
-    matches: [
-      {
-        id: 10,
-        time: "15'",
-        isLive: true,
-        liveMinute: "15'",
-        homeTeam: "Shakhtar Donetsk",
-        awayTeam: "Dynamo Kyiv",
-        homeScore: 1,
-        awayScore: 3,
-        position: "€36.48",
-        odds: {
-          "1x2": { "1": 9.216, x: 2.293, "2": 2.296 },
-          handicap: { value: "-1.5", a1: 4.091, a2: 1.101 },
-          total: { value: "2.5", o: 2.241, u: 2.962 },
-        },
-        priceHighlight: "green",
-      },
-      {
-        id: 11,
-        time: "15'",
-        isLive: true,
-        liveMinute: "15'",
-        homeTeam: "Veres Rivne",
-        awayTeam: "Karpaty Lviv",
-        homeScore: 2,
-        awayScore: 0,
-        odds: {
-          "1x2": { "1": 6.410, x: 2.442, "2": 1.094 },
-          handicap: { value: "-1.5", a1: 7.169, a2: 5.250 },
-          total: { value: "2.5", o: 5.354, u: 4.001 },
-        },
-        priceHighlight: "green",
-      },
-    ],
-  },
-];
-
-const todaySections: TableSection[] = [
-  {
-    title: "TODAY",
-    count: 2,
-    league: "Primeira Liga",
-    matches: [
-      {
-        id: 20,
-        time: "Today",
-        homeTeam: "FC Porto",
-        awayTeam: "S.L. Benfica",
-        position: "",
-        odds: {
-          "1x2": { "1": 14.187, x: 1.101, "2": 14.187 },
-          handicap: { value: "-1.5", a1: 4.216, a2: 7.098 },
-          total: { value: "2.5", o: 5.354, u: 5.210 },
-        },
-        priceHighlight: "green",
-      },
-      {
-        id: 21,
-        time: "Today",
-        homeTeam: "Sporting CP",
-        awayTeam: "Boavista F.C.",
-        position: "€36.48",
-        odds: {
-          "1x2": { "1": 1.150, x: 5.195, "2": 1.101 },
-          handicap: { value: "-1.5", a1: 14.187, a2: 2.442 },
-          total: { value: "2.5", o: 9.216, u: 7.123 },
-        },
-      },
-    ],
-  },
-  {
-    title: "",
-    league: "Seria A",
-    count: 0,
-    matches: [
-      {
-        id: 22,
-        time: "Today",
-        homeTeam: "AC Milan",
-        awayTeam: "Inter",
-        position: "€36.48",
-        odds: {
-          "1x2": { "1": 4.091, x: 9.216, "2": 4.001 },
-          handicap: { value: "-1.5", a1: 1.094, a2: 2.849 },
-          total: { value: "2.5", o: 4.526, u: 1.314 },
-        },
-        priceHighlight: "green",
-      },
-    ],
-  },
-];
+import { useHighlights, HighlightMatch } from "@/hooks/useHighlights";
+import { useEffect, useRef, useCallback } from "react";
+import { format } from "date-fns";
 
 interface OddsButtonProps {
   value: number | string;
@@ -262,7 +13,7 @@ interface OddsButtonProps {
 }
 
 const OddsButton = ({ value, highlight, isSelected, onClick }: OddsButtonProps) => {
-  const numValue = typeof value === 'number' ? value.toFixed(3) : value;
+  const numValue = typeof value === 'number' ? value.toFixed(2) : value;
   
   return (
     <button 
@@ -302,42 +53,55 @@ const OddsCell = ({ children }: { children: React.ReactNode }) => (
   </td>
 );
 
-const MatchRow = ({ match }: { match: Match }) => {
+const MatchRow = ({ match }: { match: HighlightMatch }) => {
   const { selections, addSelection } = useBetslip();
-  const matchId = `match-${match.id}`;
+  const matchId = `match-${match.match_id}`;
 
   const isSelected = (selectionId: string) => 
     selections.some((s) => s.id === selectionId);
 
-  const handleOddClick = (market: string, selection: string, oddsValue: number) => {
+  const handleOddClick = (market: string, selection: string, oddsValue: number, outcomeId: string) => {
     const selectionId = `${matchId}-${market}-${selection}`;
     addSelection({
       id: selectionId,
       matchId,
-      homeTeam: match.homeTeam,
-      awayTeam: match.awayTeam,
+      homeTeam: match.home_team,
+      awayTeam: match.away_team,
       market,
       selection,
       odds: oddsValue,
     });
   };
 
+  const outcomes = match.highlight_market?.outcomes || [];
+  const outcome1 = outcomes.find(o => o.alias === "1");
+  const outcomeX = outcomes.find(o => o.alias === "X");
+  const outcome2 = outcomes.find(o => o.alias === "2");
+
+  const isLive = match.fixture_status?.status_name === "Live" || 
+                 (match.fixture_status?.status !== 0 && match.fixture_status?.event_time);
+  
+  const matchDate = new Date(match.date);
+  const isToday = new Date().toDateString() === matchDate.toDateString();
+  const timeDisplay = isLive 
+    ? match.fixture_status?.event_time || "LIVE" 
+    : isToday 
+      ? format(matchDate, "HH:mm")
+      : format(matchDate, "dd MMM");
+
   return (
     <tr className="border-b border-border hover:bg-row-hover transition-colors">
       <td className="w-6 px-1">
-        <Star className={`w-3 h-3 ${match.isFavorite ? "text-accent fill-accent" : "text-muted-foreground"}`} />
+        <Star className="w-3 h-3 text-muted-foreground" />
       </td>
       <td className="px-2 py-1 text-xxs w-16">
-        {match.isLive ? (
-          <span className="live-badge">{match.liveMinute}</span>
+        {isLive ? (
+          <span className="live-badge">{timeDisplay}</span>
         ) : (
-          <span className="text-muted-foreground">{match.time}</span>
+          <span className="text-muted-foreground">{timeDisplay}</span>
         )}
-        {match.time.includes("Jul") && (
-          <div className="text-muted-foreground text-xxs">19:00</div>
-        )}
-        {match.time === "Today" && (
-          <div className="text-muted-foreground text-xxs">19:00</div>
+        {!isToday && !isLive && (
+          <div className="text-muted-foreground text-xxs">{format(matchDate, "HH:mm")}</div>
         )}
       </td>
       <td className="px-1 py-1 w-6">
@@ -345,88 +109,76 @@ const MatchRow = ({ match }: { match: Match }) => {
       </td>
       <td className="px-2 py-1 min-w-[140px]">
         <div className="flex flex-col text-xxs">
-          <span className="text-foreground">{match.homeTeam}</span>
-          <span className="text-foreground">{match.awayTeam}</span>
+          <span className="text-foreground">{match.home_team}</span>
+          <span className="text-foreground">{match.away_team}</span>
         </div>
       </td>
       <td className="px-2 py-1 w-8 text-xxs">
-        {match.homeScore !== undefined && (
+        {isLive && match.fixture_status && (
           <div className="flex flex-col">
-            <span className={match.isLive ? "text-primary" : "text-foreground"}>{match.homeScore}</span>
-            <span className={match.isLive ? "text-primary" : "text-foreground"}>{match.awayScore}</span>
+            <span className="text-primary">{match.fixture_status.home_score}</span>
+            <span className="text-primary">{match.fixture_status.away_score}</span>
           </div>
         )}
       </td>
       <td className="px-2 py-1 w-16 text-xxs text-odds-green">
-        {match.position}
+        +{match.fixture_status?.markets || 0}
       </td>
       <td className="w-px bg-border"></td>
       
       {/* 1X2 */}
       <OddsCell>
-        <OddsButton 
-          value={match.odds["1x2"]["1"]} 
-          highlight={match.id === 1 ? "green" : undefined}
-          isSelected={isSelected(`${matchId}-1X2-1`)}
-          onClick={() => handleOddClick("1X2", "1", match.odds["1x2"]["1"])}
-        />
+        {outcome1 && (
+          <OddsButton 
+            value={outcome1.odds} 
+            isSelected={isSelected(`${matchId}-1X2-1`)}
+            onClick={() => handleOddClick("1X2", "1", outcome1.odds, outcome1.outcome_id)}
+          />
+        )}
       </OddsCell>
       <OddsCell>
-        <OddsButton 
-          value={match.odds["1x2"].x}
-          isSelected={isSelected(`${matchId}-1X2-X`)}
-          onClick={() => handleOddClick("1X2", "X", match.odds["1x2"].x)}
-        />
+        {outcomeX && (
+          <OddsButton 
+            value={outcomeX.odds}
+            isSelected={isSelected(`${matchId}-1X2-X`)}
+            onClick={() => handleOddClick("1X2", "X", outcomeX.odds, outcomeX.outcome_id)}
+          />
+        )}
       </OddsCell>
       <OddsCell>
-        <OddsButton 
-          value={match.odds["1x2"]["2"]}
-          isSelected={isSelected(`${matchId}-1X2-2`)}
-          onClick={() => handleOddClick("1X2", "2", match.odds["1x2"]["2"])}
-        />
-      </OddsCell>
-      
-      <td className="w-px bg-border"></td>
-      
-      {/* Asian Handicap */}
-      <td className="px-1 py-1 text-center">
-        <span className="text-xxs text-muted-foreground bg-secondary/50 px-2 py-1 rounded">{match.odds.handicap.value}</span>
-      </td>
-      <OddsCell>
-        <OddsButton 
-          value={match.odds.handicap.a1} 
-          highlight={match.priceHighlight}
-          isSelected={isSelected(`${matchId}-Handicap-Home`)}
-          onClick={() => handleOddClick("Handicap", "Home", match.odds.handicap.a1)}
-        />
-      </OddsCell>
-      <OddsCell>
-        <OddsButton 
-          value={match.odds.handicap.a2}
-          isSelected={isSelected(`${matchId}-Handicap-Away`)}
-          onClick={() => handleOddClick("Handicap", "Away", match.odds.handicap.a2)}
-        />
+        {outcome2 && (
+          <OddsButton 
+            value={outcome2.odds}
+            isSelected={isSelected(`${matchId}-1X2-2`)}
+            onClick={() => handleOddClick("1X2", "2", outcome2.odds, outcome2.outcome_id)}
+          />
+        )}
       </OddsCell>
       
       <td className="w-px bg-border"></td>
       
-      {/* Asian Total */}
+      {/* Asian Handicap placeholder */}
       <td className="px-1 py-1 text-center">
-        <span className="text-xxs text-muted-foreground bg-secondary/50 px-2 py-1 rounded">{match.odds.total.value}</span>
+        <span className="text-xxs text-muted-foreground bg-secondary/50 px-2 py-1 rounded">-</span>
       </td>
       <OddsCell>
-        <OddsButton 
-          value={match.odds.total.o}
-          isSelected={isSelected(`${matchId}-Total-Over`)}
-          onClick={() => handleOddClick("Total", "Over", match.odds.total.o)}
-        />
+        <OddsButton value="-" />
       </OddsCell>
       <OddsCell>
-        <OddsButton 
-          value={match.odds.total.u}
-          isSelected={isSelected(`${matchId}-Total-Under`)}
-          onClick={() => handleOddClick("Total", "Under", match.odds.total.u)}
-        />
+        <OddsButton value="-" />
+      </OddsCell>
+      
+      <td className="w-px bg-border"></td>
+      
+      {/* Asian Total placeholder */}
+      <td className="px-1 py-1 text-center">
+        <span className="text-xxs text-muted-foreground bg-secondary/50 px-2 py-1 rounded">-</span>
+      </td>
+      <OddsCell>
+        <OddsButton value="-" />
+      </OddsCell>
+      <OddsCell>
+        <OddsButton value="-" />
       </OddsCell>
     </tr>
   );
@@ -449,12 +201,13 @@ const TableHeader = () => (
   </tr>
 );
 
-const LeagueHeader = ({ league, showRefresh = true }: { league: string; showRefresh?: boolean }) => (
+const LeagueHeader = ({ league, country, showRefresh = true }: { league: string; country: string; showRefresh?: boolean }) => (
   <tr className="bg-secondary/30">
     <td colSpan={20} className="px-2 py-1">
       <div className="flex items-center gap-2">
         <Star className="w-3 h-3 text-muted-foreground" />
-        <span className="text-xxs text-foreground">{league}</span>
+        <span className="text-xxs text-muted-foreground">{country}</span>
+        <span className="text-xxs text-foreground font-medium">{league}</span>
         {showRefresh && <RefreshCw className="w-2.5 h-2.5 text-muted-foreground ml-auto" />}
       </div>
     </td>
@@ -484,71 +237,120 @@ const SubTableHeader = () => (
   </tr>
 );
 
+// Group matches by tournament
+const groupMatchesByTournament = (matches: HighlightMatch[]) => {
+  const groups: Record<string, { tournament: string; country: string; matches: HighlightMatch[] }> = {};
+  
+  matches.forEach(match => {
+    const key = `${match.tournament_id}-${match.tournament}`;
+    if (!groups[key]) {
+      groups[key] = {
+        tournament: match.tournament,
+        country: match.country,
+        matches: [],
+      };
+    }
+    groups[key].matches.push(match);
+  });
+  
+  return Object.values(groups);
+};
+
 const OddsTable = () => {
+  const { matches, loading, loadingMore, hasMore, loadMore, refresh, error } = useHighlights();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    if (scrollHeight - scrollTop - clientHeight < 200 && hasMore && !loadingMore) {
+      loadMore();
+    }
+  }, [hasMore, loadingMore, loadMore]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const groupedMatches = groupMatchesByTournament(matches);
+
+  if (loading && matches.length === 0) {
+    return (
+      <div className="hidden md:flex flex-1 items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Failed to load matches</p>
+        <button onClick={refresh} className="text-primary hover:underline">
+          Try again
+        </button>
+      </div>
+    );
+  }
+
   return (
-    // Hidden on mobile, visible on md and up
-    <div className="hidden md:block flex-1 overflow-auto">
+    <div ref={scrollRef} className="hidden md:block flex-1 overflow-auto">
       <table className="w-full text-sm">
         <thead className="sticky top-0 z-10">
           <TableHeader />
         </thead>
         <tbody>
-          {/* Favourites Section */}
+          {/* Highlights Section */}
           <tr className="bg-secondary/50">
             <td colSpan={20} className="px-2 py-1">
               <div className="flex items-center gap-2">
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xxs font-medium text-foreground">FAVOURITES</span>
-                <span className="text-xxs text-muted-foreground">2</span>
+                <span className="text-xxs font-medium text-foreground">HIGHLIGHTS</span>
+                <span className="text-xxs text-muted-foreground">{matches.length}</span>
+                <button onClick={refresh} className="ml-auto">
+                  <RefreshCw className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
+                </button>
               </div>
             </td>
           </tr>
           
-          <LeagueHeader league="UEFA Champions League" />
-          <SubTableHeader />
-          {sections[1].matches.map((match) => (
-            <MatchRow key={match.id} match={match} />
+          {groupedMatches.map((group, idx) => (
+            <React.Fragment key={`${group.tournament}-${idx}`}>
+              <LeagueHeader league={group.tournament} country={group.country} />
+              <SubTableHeader />
+              {group.matches.map((match) => (
+                <MatchRow key={match.match_id} match={match} />
+              ))}
+            </React.Fragment>
           ))}
 
-          {/* Live Section */}
-          <tr className="bg-secondary/50">
-            <td colSpan={20} className="px-2 py-1">
-              <div className="flex items-center gap-2">
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xxs font-medium text-foreground">LIVE</span>
-                <span className="text-xxs text-muted-foreground">2</span>
-              </div>
-            </td>
-          </tr>
-          
-          <LeagueHeader league="Ukrainian Premier League" />
-          <SubTableHeader />
-          {liveSections[0].matches.map((match) => (
-            <MatchRow key={match.id} match={match} />
-          ))}
+          {/* Loading more indicator */}
+          {loadingMore && (
+            <tr>
+              <td colSpan={20} className="py-4 text-center">
+                <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" />
+              </td>
+            </tr>
+          )}
 
-          {/* Today Section */}
-          <tr className="bg-secondary/50">
-            <td colSpan={20} className="px-2 py-1">
-              <div className="flex items-center gap-2">
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xxs font-medium text-foreground">TODAY</span>
-                <span className="text-xxs text-muted-foreground">2</span>
-              </div>
-            </td>
-          </tr>
-          
-          <LeagueHeader league="Primeira Liga" />
-          <SubTableHeader />
-          {todaySections[0].matches.map((match) => (
-            <MatchRow key={match.id} match={match} />
-          ))}
-          
-          <LeagueHeader league="Seria A" />
-          <SubTableHeader />
-          {todaySections[1].matches.map((match) => (
-            <MatchRow key={match.id} match={match} />
-          ))}
+          {/* Load more trigger */}
+          {hasMore && !loadingMore && (
+            <tr>
+              <td colSpan={20} className="py-2 text-center">
+                <button 
+                  onClick={loadMore}
+                  className="text-xxs text-primary hover:underline"
+                >
+                  Load more matches
+                </button>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

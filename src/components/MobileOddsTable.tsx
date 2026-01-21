@@ -1,147 +1,159 @@
+import { useCallback, useEffect, useRef } from "react";
 import MobileLeagueHeader from "./MobileLeagueHeader";
 import MobileMatchCard from "./MobileMatchCard";
 import { TrophyIcon } from "./icons/SportIcons";
-import { FlagPortugal, FlagItaly, FlagSpain, FlagEngland } from "./icons/CountryFlags";
+import { useHighlights, HighlightMatch } from "@/hooks/useHighlights";
+import { Loader2, RefreshCw } from "lucide-react";
 
-const matches = [
-  {
-    league: { flag: "trophy", country: "Europe", name: "UEFA Champions League" },
-    matches: [
-      {
-        matchId: "ucl-1",
-        time: "15'",
-        isLive: true,
-        liveMinute: "15'",
-        homeTeam: "Paris Saint-Germain",
-        awayTeam: "Manchester City",
-        homeScore: 4,
-        awayScore: 3,
-        position: "UGX 135K",
-        odds: {
-          "1x2": { "1": 2.28, x: 2.44, "2": 7.14 },
-          handicap: { value: "-1.5", home: 5.25, away: 14.19 },
-          total: { value: "2.5", over: 1.31, under: 1.10 },
-        },
-        highlightColor: "green" as const,
-      },
-      {
-        matchId: "ucl-2",
-        time: "90'+15'",
-        isLive: true,
-        liveMinute: "90'+15'",
-        homeTeam: "Shakhtar Donetsk",
-        awayTeam: "Dynamo Kyiv",
-        homeScore: 0,
-        awayScore: 0,
-        position: "UGX 135K",
-        odds: {
-          "1x2": { "1": 2.24, x: 1.10, "2": 9.75 },
-          handicap: { value: "-1.5", home: 7.12, away: 14.19 },
-          total: { value: "2.5", over: 3.22, under: 8.21 },
-        },
-      },
-    ],
-  },
-  {
-    league: { flag: "pt", country: "Portugal", name: "Primeira Liga" },
-    matches: [
-      {
-        matchId: "pt-1",
-        time: "19:00",
-        homeTeam: "FC Porto",
-        awayTeam: "S.L. Benfica",
-        odds: {
-          "1x2": { "1": 14.19, x: 1.10, "2": 14.19 },
-          handicap: { value: "-1.5", home: 4.22, away: 7.10 },
-          total: { value: "2.5", over: 5.35, under: 5.21 },
-        },
-        highlightColor: "green" as const,
-      },
-    ],
-  },
-  {
-    league: { flag: "it", country: "Italy", name: "Serie A" },
-    matches: [
-      {
-        matchId: "it-1",
-        time: "20:45",
-        homeTeam: "AC Milan",
-        awayTeam: "Inter",
-        position: "UGX 135K",
-        odds: {
-          "1x2": { "1": 4.09, x: 9.22, "2": 4.00 },
-          handicap: { value: "-1.5", home: 1.09, away: 2.85 },
-          total: { value: "2.5", over: 4.53, under: 1.31 },
-        },
-        highlightColor: "green" as const,
-      },
-    ],
-  },
-  {
-    league: { flag: "es", country: "Spain", name: "La Liga" },
-    matches: [
-      {
-        matchId: "es-1",
-        time: "21:00",
-        homeTeam: "Real Madrid",
-        awayTeam: "Barcelona",
-        position: "UGX 460K",
-        odds: {
-          "1x2": { "1": 2.10, x: 3.50, "2": 3.40 },
-          handicap: { value: "-0.5", home: 2.20, away: 1.75 },
-          total: { value: "2.5", over: 1.70, under: 2.20 },
-        },
-        highlightColor: "yellow" as const,
-      },
-    ],
-  },
-  {
-    league: { flag: "en", country: "England", name: "Premier League" },
-    matches: [
-      {
-        matchId: "en-1",
-        time: "17:30",
-        homeTeam: "Liverpool",
-        awayTeam: "Chelsea",
-        odds: {
-          "1x2": { "1": 1.85, x: 3.60, "2": 4.20 },
-          handicap: { value: "-1", home: 2.45, away: 1.62 },
-          total: { value: "3.5", over: 2.10, under: 1.80 },
-        },
-      },
-    ],
-  },
-];
-
-const getFlagComponent = (flag: string) => {
-  switch (flag) {
-    case "pt": return <FlagPortugal className="w-5 h-3.5" />;
-    case "it": return <FlagItaly className="w-5 h-3.5" />;
-    case "es": return <FlagSpain className="w-5 h-3.5" />;
-    case "en": return <FlagEngland className="w-5 h-3.5" />;
-    case "trophy": return <TrophyIcon className="w-5 h-5 text-accent" />;
-    default: return <TrophyIcon className="w-5 h-5 text-accent" />;
-  }
+// Group matches by tournament
+const groupMatchesByTournament = (matches: HighlightMatch[]) => {
+  const groups: Record<string, { tournament: string; country: string; matches: HighlightMatch[] }> = {};
+  
+  matches.forEach(match => {
+    const key = `${match.tournament_id}-${match.tournament}`;
+    if (!groups[key]) {
+      groups[key] = {
+        tournament: match.tournament,
+        country: match.country,
+        matches: [],
+      };
+    }
+    groups[key].matches.push(match);
+  });
+  
+  return Object.values(groups);
 };
 
 const MobileOddsTable = () => {
+  const { matches, loading, loadingMore, hasMore, loadMore, refresh, error } = useHighlights();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    if (scrollHeight - scrollTop - clientHeight < 200 && hasMore && !loadingMore) {
+      loadMore();
+    }
+  }, [hasMore, loadingMore, loadMore]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const groupedMatches = groupMatchesByTournament(matches);
+
+  if (loading && matches.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center md:hidden">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 md:hidden">
+        <p className="text-muted-foreground text-sm">Failed to load matches</p>
+        <button onClick={refresh} className="text-primary hover:underline text-sm">
+          Try again
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto md:hidden w-full scrollbar-thin pb-2">
-      {matches.map((section, i) => (
-        <div key={i}>
+    <div 
+      ref={scrollRef}
+      className="flex-1 overflow-y-auto md:hidden w-full scrollbar-thin pb-2"
+    >
+      {/* Refresh button */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur px-3 py-2 flex items-center justify-between border-b border-border">
+        <span className="text-xs text-muted-foreground">{matches.length} matches</span>
+        <button 
+          onClick={refresh}
+          className="flex items-center gap-1 text-xs text-primary"
+        >
+          <RefreshCw className="w-3 h-3" />
+          Refresh
+        </button>
+      </div>
+
+      {groupedMatches.map((group, i) => (
+        <div key={`${group.tournament}-${i}`}>
           <MobileLeagueHeader 
-            flag={getFlagComponent(section.league.flag)}
-            country={section.league.country}
-            league={section.league.name}
+            flag={<TrophyIcon className="w-5 h-5 text-accent" />}
+            country={group.country}
+            league={group.tournament}
           />
-          {section.matches.map((match, j) => (
-            <MobileMatchCard 
-              key={j}
-              {...match}
-            />
-          ))}
+          {group.matches.map((match) => {
+            const outcomes = match.highlight_market?.outcomes || [];
+            const outcome1 = outcomes.find(o => o.alias === "1");
+            const outcomeX = outcomes.find(o => o.alias === "X");
+            const outcome2 = outcomes.find(o => o.alias === "2");
+
+            const isLive = match.fixture_status?.status_name === "Live" || 
+                           (match.fixture_status?.status !== 0 && match.fixture_status?.event_time);
+            
+            const matchDate = new Date(match.date);
+            const isToday = new Date().toDateString() === matchDate.toDateString();
+            
+            const formatTime = () => {
+              if (isLive) return match.fixture_status?.event_time || "LIVE";
+              const hours = matchDate.getHours().toString().padStart(2, '0');
+              const minutes = matchDate.getMinutes().toString().padStart(2, '0');
+              return `${hours}:${minutes}`;
+            };
+
+            return (
+              <MobileMatchCard 
+                key={match.match_id}
+                matchId={`match-${match.match_id}`}
+                time={formatTime()}
+                isLive={!!isLive}
+                liveMinute={isLive ? match.fixture_status?.event_time : undefined}
+                homeTeam={match.home_team}
+                awayTeam={match.away_team}
+                homeScore={isLive ? parseInt(match.fixture_status?.home_score || "0") : undefined}
+                awayScore={isLive ? parseInt(match.fixture_status?.away_score || "0") : undefined}
+                position={`+${match.fixture_status?.markets || 0}`}
+                odds={{
+                  "1x2": {
+                    "1": outcome1?.odds || 0,
+                    x: outcomeX?.odds || 0,
+                    "2": outcome2?.odds || 0,
+                  },
+                  handicap: { value: "-", home: 0, away: 0 },
+                  total: { value: "-", over: 0, under: 0 },
+                }}
+              />
+            );
+          })}
         </div>
       ))}
+
+      {/* Loading more */}
+      {loadingMore && (
+        <div className="py-4 flex justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      )}
+
+      {/* Load more button */}
+      {hasMore && !loadingMore && (
+        <div className="py-4 flex justify-center">
+          <button 
+            onClick={loadMore}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm"
+          >
+            Load more matches
+          </button>
+        </div>
+      )}
     </div>
   );
 };
